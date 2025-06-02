@@ -1,0 +1,6 @@
+[hooks]
+pre-commit = "cargo xtask hook pre-commit"
+pre-push = "cargo xtask hook pre-push"
+
+[logging]
+verbose = true
