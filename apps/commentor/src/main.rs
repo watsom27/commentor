@@ -3,11 +3,12 @@ use std::{
     io::{stdin, BufWriter, Write},
     path::{Path, PathBuf},
     process::{self},
+    rc::Rc,
 };
 
 use clap::Parser;
 use directories::ProjectDirs;
-use github::{get_pull_request, parse_url, post_comment};
+use github::{get_pull_request, parse_url, post_comment, PullRequestIdentifier};
 use parser::read_config_file;
 use reqwest::blocking::Client;
 
@@ -33,7 +34,11 @@ enum Command {
     Open,
 
     /// Post comments from configuration file
-    Run,
+    Run {
+        /// Skip confirmation before posting comments.
+        #[arg(short, long, default_value_t = false)]
+        force: bool,
+    },
 }
 
 fn main() {
@@ -130,7 +135,7 @@ fn main() {
                 }
             },
 
-            Command::Run => {
+            Command::Run { force } => {
                 if initialised(&config_file_path) {
                     match read_config_file(&config_file_path) {
                         Ok(config) => {
@@ -165,21 +170,21 @@ fn main() {
                                                     println!("- {comment}");
                                                 }
 
-                                                println!();
-                                                println!("Confirm? (y/n): ");
-
-                                                let mut buf = String::with_capacity(10);
-                                                stdin().read_line(&mut buf).unwrap();
-                                                let trim = buf.trim();
-
-                                                if trim == "y" || trim == "Y" {
-                                                    for comment in config.comments.iter() {
+                                                /// Loop through the comments, and send them all to
+                                                /// GitHub
+                                                fn post_comments(
+                                                    comments: Rc<[String]>,
+                                                    client: &Client,
+                                                    identifier: &PullRequestIdentifier,
+                                                    github_token: &str,
+                                                ) {
+                                                    for comment in comments.iter() {
                                                         print!("Posting comment {comment}: ");
 
                                                         match post_comment(
                                                             &client,
                                                             &identifier,
-                                                            &config.github_token,
+                                                            github_token,
                                                             comment.trim(),
                                                         ) {
                                                             Ok(status) => println!("[{status:?}]"),
@@ -191,8 +196,35 @@ fn main() {
 
                                                     println!();
                                                     println!("** Done **");
+                                                }
+
+                                                println!();
+
+                                                if !force {
+                                                    println!("Confirm? (y/n): ");
+
+                                                    let mut buf = String::with_capacity(10);
+                                                    stdin().read_line(&mut buf).unwrap();
+                                                    let trim = buf.trim();
+
+                                                    if trim == "y" || trim == "Y" {
+                                                        post_comments(
+                                                            config.comments,
+                                                            &client,
+                                                            &identifier,
+                                                            &config.github_token,
+                                                        );
+                                                    } else {
+                                                        log::error!("Aborted");
+                                                    }
                                                 } else {
-                                                    log::error!("Aborted");
+                                                    println!("Skipping confirmation");
+                                                    post_comments(
+                                                        config.comments,
+                                                        &client,
+                                                        &identifier,
+                                                        &config.github_token,
+                                                    );
                                                 }
                                             } else {
                                                 log::error!(
