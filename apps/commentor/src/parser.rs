@@ -11,7 +11,7 @@ pub struct ConfigFile {
 
 #[derive(Logos, Debug, PartialEq)]
 pub enum Token<'a> {
-    #[regex("(http(s)?:\\/\\/)?[A-Za-z0-9-_\\.\\/]+")]
+    #[regex("(http(s)?:\\/\\/)?[A-Za-z0-9-_\\.\\/=]+")]
     Identifier(&'a str),
 
     #[token(":")]
@@ -118,14 +118,39 @@ pub fn read_config_file(path: &Path) -> anyhow::Result<ConfigFile> {
             if let Some(comment) =
                 lex.next_if(|t| matches!(t.as_ref().unwrap(), Token::Identifier(_)))
             {
-                log::trace!("found command(comment): {comment:?}");
-                if let Token::Identifier(comment) = comment.unwrap() {
-                    comments.push(comment.to_owned());
+                let mut comment_line = String::new();
+
+                if let Token::Identifier(c) = comment.unwrap() {
+                    log::trace!("Start identifier: {c}");
+                    comment_line.push_str(c);
                 } else {
                     unreachable!()
                 }
 
-                expect!(lex, Token::NewLine);
+                while matched!(lex, Token::NewLine).is_none() {
+                    // Reinsert spaces and colons into the comment
+                    while matched!(lex, Token::Space).is_some() {
+                        log::trace!("Appending: ' '");
+                        comment_line.push(' ');
+                    }
+
+                    while matched!(lex, Token::Colon).is_some() {
+                        log::trace!("Appending: ':'");
+                        comment_line.push(':');
+                    }
+
+                    let comment = expect!(lex, Token::Identifier(_));
+
+                    if let Token::Identifier(c) = comment {
+                        log::trace!("Appending: {c}");
+                        comment_line.push_str(c);
+                    } else {
+                        unreachable!()
+                    }
+                }
+
+                log::trace!("Full line: {comment_line}");
+                comments.push(comment_line);
             }
         }
     }
