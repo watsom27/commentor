@@ -1,18 +1,27 @@
 [package]
-name = "commentor"
-version = "0.3.0"
-edition = "2021"
+name        = "commentor"
+version     = "0.3.0"
+authors     = ["Michael Watson"]
+edition     = "2021"
+
+description     = "Small tool for bulk commenting on GitHub pull requests, useful for triggering multiple github actions."
+readme          = "../../README.md"
+license         = "MIT"
+repository      = "https://github.com/watsom27/commentor"
+keywords        = ["github", "comment", "comments", "bulk"]
+categories      = ["command-line-utilities"]
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 
-anyhow     		= { workspace = true }
-clap 			= { workspace = true, features = ["derive"] }
+anyhow          = { workspace = true }
+clap            = { workspace = true, features = ["derive"] }
 directories     = { workspace = true }
-log 			= { workspace = true }
+log             = { workspace = true }
 logos           = { workspace = true }
-reqwest 		= { workspace = true, features = ["blocking"] }
-serde			= { workspace = true }
-serde_json		= { workspace = true }
-simple_logger 	= { workspace = true }
+reqwest         = { workspace = true, features = ["blocking"] }
+serde           = { workspace = true }
+serde_json      = { workspace = true }
+simple_logger   = { workspace = true }
