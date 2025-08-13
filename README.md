@@ -7,7 +7,7 @@ Small tool for bulk commenting on GitHub pull requests, useful for triggering mu
 1. Installation
 
 ```bash
-cargo install --path ./apps/commentor
+cargo install commentor
 ```
 
 2. Setup
@@ -24,6 +24,15 @@ commentor open
 
 Specify comments below `comments:` in the config file, one per line. Lines beginning with # are ignored.
 
+Example config file:
+```md
+editor: subl
+github_token: abc
+pr_url: www.github.com
+comments:
+/run-some-build
+# /but-not-this-one-yet
+```
 
 4. Post comments
 

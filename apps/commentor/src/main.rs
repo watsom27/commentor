@@ -101,7 +101,7 @@ fn main() {
                             log::error!("Failed to write to file: {e}");
                         }
 
-                        if let Err(e) = writeln!(buffer, "pr_url:") {
+                        if let Err(e) = writeln!(buffer, "pr_url: www.github.com") {
                             log::error!("Failed to write to file: {e}");
                         }
 
@@ -110,7 +110,7 @@ fn main() {
                         }
 
                         if let Err(e) = buffer.flush() {
-                            log::error!("Failed to flush write 6buffer: {e}");
+                            log::error!("Failed to flush write buffer: {e}");
                         }
                     },
                 }
